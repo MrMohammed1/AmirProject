@@ -118,34 +118,6 @@ def signup(request):
 
 
 
-def signup(request):
-    if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
-        password2 = request.POST['password2']
-        email = request.POST['email']
-
-        if password != password2:
-            messages.error(request, "Passwords do not match.")
-            return render(request, 'signup.html', {'email': email, 'username': username})
-
-        try:
-            user = User.objects.create_user(username=username, password=password, email=email)
-            user.save()
-
-            otp = generate_otp()
-            expiration_time = timezone.now() + timedelta(minutes=1)
-            UserOTP.objects.create(user=user, otp=otp, expiration_time=expiration_time)
-            send_otp_email(user.email, otp)
-
-            messages.success(request, "User registered successfully! Please check your email for OTP.")
-            return redirect('verify_otp')
-        except Exception as e:
-            messages.error(request, str(e))
-            return redirect('signup')
-
-    return render(request, 'signup.html')
-
 
 def verify_otp(request):
     if request.method == "POST":
