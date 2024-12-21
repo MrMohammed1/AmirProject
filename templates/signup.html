@@ -7,29 +7,42 @@
 </head>
 <body>
     <h2>Sign Up</h2>
-    <form method="POST">
+    <form method="post">
         {% csrf_token %}
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
-        
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
-        
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
-        
-        <label for="password2">Confirm Password:</label>
-        <input type="password" id="password2" name="password2" required><br><br>
 
-        <button type="submit">Register</button>
+        <div>
+            <label for="username" style="display: inline-block; width: 150px;">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username" value="{{username}}" required><br><br>
+        </div>
+
+        <div>
+            <label for="password" style="display: inline-block; width: 150px;">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required><br><br>
+        </div>
+
+        <div>
+            <label for="password2" style="display: inline-block; width: 150px;">Confirm Password:</label>
+            <input type="password" id="password2" name="password2" placeholder="Confirm your password" required><br><br>
+        </div>
+
+        <div>
+            <label for="email" style="display: inline-block; width: 150px;">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email address" value="{{ email }}" required><br><br>
+        </div>
+
+        <div>
+            <button type="submit">Register</button>
+        </div>
     </form>
 
     {% if messages %}
-        <ul>
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
+        <div>
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     {% endif %}
 </body>
 </html>

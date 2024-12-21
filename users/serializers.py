@@ -20,6 +20,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 # Serializer for Login
-class LoginSerializer(serializers.ModelSerializer):
+class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
