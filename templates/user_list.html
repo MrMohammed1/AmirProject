@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+</head>
+<body>
+    <h2>User List</h2>
+    
+    <!-- نموذج البحث -->
+    <form method="get">
+        <div>
+            <label for="query">Search by Username:</label>
+            <input type="text" id="query" name="query" placeholder="Enter username" value="{{ request.GET.query }}">
+        </div>
+        <div>
+            <label for="email">Filter by Email:</label>
+            <input type="text" id="email" name="email" placeholder="Enter email" value="{{ request.GET.email }}">
+        </div>
+        <div>
+            <label for="ordering">Sort by:</label>
+            <select name="ordering" id="ordering">
+                <option value="username" {% if request.GET.ordering == 'username' %}selected{% endif %}>Username</option>
+                <option value="email" {% if request.GET.ordering == 'email' %}selected{% endif %}>Email</option>
+            </select>
+        </div>
+        <button type="submit">Search</button>
+    </form>
+
+    
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Actions</th>  
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <a href="{% url 'user-edit' user.id %}">Edit</a> | 
+                        <a href="{% url 'user-delete' user.id %}">Delete</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No users found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

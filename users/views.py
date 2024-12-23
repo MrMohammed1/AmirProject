@@ -2,6 +2,7 @@ from django.core.mail import send_mail
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from django.conf import settings
 import random
@@ -9,9 +10,9 @@ from datetime import timedelta
 from .models import UserOTP
 from django.contrib.auth import authenticate
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .serializers import SignUpSerializer
+from .serializers import SignUpSerializer,UserSerializer
 
 
 def generate_otp():
@@ -133,7 +134,7 @@ def verify_otp(request):
 
             if user_otp.otp == otp:
                 messages.success(request, "OTP verified successfully!")
-                return redirect('/admin/')
+                return redirect('user-list')
             else:
                 messages.error(request, "Invalid OTP. Please try again.")
                 return render(request, 'verify_otp.html', {'email': email})
@@ -254,4 +255,95 @@ def login_view(request):
             return redirect('login')
 
     return render(request, 'login.html')
+
+
+
+class UserListView(APIView):
+    def get(self, request):
+        query = request.GET.get('query', '')
+        email_query = request.GET.get('email', '')
+        ordering = request.GET.get('ordering', 'username')
+
+        users = User.objects.all()
+
+        if query:
+            users = users.filter(username__icontains=query)
+        if email_query:
+            users = users.filter(email__icontains=email_query)
+
+        users = users.order_by(ordering)
+
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+
+class UserDetailView(APIView):
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        if 'username' in request.data and User.objects.filter(username=request.data['username']).exclude(pk=pk).exists():
+            raise ValidationError({"username": "This username is already taken."})
+        if 'email' in request.data and User.objects.filter(email=request.data['email']).exclude(pk=pk).exists():
+            raise ValidationError({"email": "This email is already taken."})
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        user.delete()
+        return Response({"message": "User deleted successfully."}, status=status.HTTP_200_OK)
+
+
+    
+
+
+
+def user_list(request):
+    query = request.GET.get('query', '')
+    email_query = request.GET.get('email', '')
+    ordering = request.GET.get('ordering', 'username')
+
+    users = User.objects.all()
+
+    if query:
+        users = users.filter(username__icontains=query)
+    if email_query:
+        users = users.filter(email__icontains=email_query)
+
+    users = users.order_by(ordering)
+
+    return render(request, 'user_list.html', {'users': users})
+
+
+def user_edit(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    if request.method == 'POST':
+        user.username = request.POST.get('username')
+        user.email = request.POST.get('email')
+        user.save()
+
+        messages.success(request, f'User {user.username} updated successfully.')
+        return redirect('user-list')
+
+    return render(request, 'user_edit.html', {'user': user})
+
+
+def user_delete(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, f'User {user.username} deleted successfully.')
+        return redirect('user-list')
+
+    return render(request, 'user_confirm_delete.html', {'user': user})
+
 
